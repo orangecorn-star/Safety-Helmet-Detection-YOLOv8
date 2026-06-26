@@ -1,0 +1,8 @@
+# data.yaml
+path: ./datasets  # 改为单点开头的相对路径
+train: images/train
+val: images/val
+nc: 2
+names:
+  0: helmet
+  1: without

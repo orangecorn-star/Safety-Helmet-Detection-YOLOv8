@@ -1,0 +1,9 @@
+datasets/images/
+datasets/labels/
+datasets/SHWD/
+
+runs/
+__pycache__/
+*.docx
+
+!*.zip

@@ -1,0 +1,8 @@
+
+path: ./datasets
+train: images/train
+val: images/val_hard
+nc: 2
+names:
+  0: helmet
+  1: without
