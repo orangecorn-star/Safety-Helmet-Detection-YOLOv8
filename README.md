@@ -1,7 +1,7 @@
 # Safety Helmet Detection in Long-Tail Scenarios Based on YOLOv8 and Hard Sample Mining
 This project addresses the Helmet missed inspection problem caused by long-tail conditions such as rain, snow, low illumination, and occlusion in industrial scenarios. Based on YOLOv8, we build a complete object detection pipeline and design an ablation study featuring "dual-channel data fusion" and "hard sample isolated testing".
 
-## 🛠️ 1. Environment Setup
+# 🛠️ 1. Environment Setup
 Ensure that Anaconda or Miniconda is installed on your system, along with an NVIDIA GPU that supports CUDA (this experiment is tuned on RTX 4050 6GB).
 
 ```bash
@@ -16,7 +16,7 @@ conda activate yolov8_env
 # 3. Install dependencies (PyTorch and Ultralytics)
 pip install -r requirements.txt
 
-## 📂 2. Data Preparation
+📂 2. Data Preparation
 This project uses two data sources: a public base dataset and a self-constructed hard sample set.
 
 Base Public Dataset (5000+ images): Due to its large size, it is not included in this repository. Please download it from the open-source community and place it under the datasets/images/ directory.
@@ -35,7 +35,7 @@ python tools/merge_hard_samples.py
 # 3. (Optional) Visualize the size distribution differences between the two datasets
 python tools/plot_data_distribution.py
 
-## 🚀 3. Training
+🚀 3. Training
 This project supports two comparison modes: Baseline and Enhanced (with hard samples). To resolve process deadlock issues on Windows, all training scripts have workers=0 set.
 
 bash
@@ -48,7 +48,7 @@ python train_yolov8_hard.py
 # (Optional) Train YOLOv10 for cross-generation architecture comparison
 python train_yolov10.py
 
-## 📊 4. Evaluation & Visualization
+📊 4. Evaluation & Visualization
 To rigorously quantify the benefits of the data augmentation strategy, 40 hard samples are isolated from the validation set for independent blind testing.
 
 Quantitative Evaluation:
@@ -68,7 +68,7 @@ python compare_test1.py
 # Run real-time video stream inference
 python VideoTest.py
 
-## 🧩 5. Project Structure
+🧩 5. Project Structure
 text
 ├── train_*.py                 # Training scripts for different ablation configurations
 ├── val_hard_only.py           # Core evaluation script: isolates hard samples for worst-case testing
@@ -86,18 +86,6 @@ text
 ├── runs/                      # Training outputs (weights, logs, evaluation results)
 └── requirements.txt           # Python dependencies
 
-## 📝 6. Citation
-If you find this work useful for your research, please consider citing:
 
-text
-@misc{helmet-detection-yolov8,
-  author = {Your Name},
-  title = {Safety Helmet Detection in Long-Tail Scenarios Based on YOLOv8 and Hard Sample Mining},
-  year = {2026},
-  publisher = {GitHub},
-  journal = {GitHub Repository},
-  howpublished = {\url{https://github.com/your-username/Safety-Helmet-Detection-YOLOv8}}
-}
-
-## 📄 7. License
+📄 6. License
 This project is for educational purposes only. The self-constructed hard sample dataset is collected from public internet resources for non-commercial research use. All copyrights belong to their respective owners.
