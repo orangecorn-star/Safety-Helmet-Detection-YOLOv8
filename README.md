@@ -1,4 +1,3 @@
-```markdown
 # Safety Helmet Detection in Long-Tail Scenarios Based on YOLOv8 and Hard Sample Mining
 This project addresses the Helmet missed inspection problem caused by long-tail conditions such as rain, snow, low illumination, and occlusion in industrial scenarios. Based on YOLOv8, we build a complete object detection pipeline and design an ablation study featuring "dual-channel data fusion" and "hard sample isolated testing".
 
