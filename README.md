@@ -72,21 +72,39 @@ python VideoTest.py
 
 # 🧩 5. Project Structure
 ```text
-├── train_*.py                 # Training scripts for different ablation configurations
-├── val_hard_only.py           # Core evaluation script: isolates hard samples for worst-case testing
-├── compare_test1.py           # Side-by-side visualization of Baseline vs Enhanced
-├── VideoTest.py               # Real-time video inference
-├── tools/
-│   ├── prepare_data.py        # VOC to YOLO format conversion
-│   ├── merge_hard_samples.py  # Hard sample injection and 8:2 split
-│   ├── plot_data_distribution.py  # Dataset size distribution visualization
-│   └── analyze_dataset.py     # Statistical analysis of bounding box areas
-├── datasets/
-│   ├── Hard_Samples/          # 200 hard sample images
-│   ├── Hard_Samples_labels/   # Corresponding YOLO-format labels
-│   └── images/ & labels/      # Training/validation splits (after preparation)
-├── runs/                      # Training outputs (weights, logs, evaluation results)
-└── requirements.txt           # Python dependencies
+Safety-Helmet-Detection-YOLOv8/
+│
+├── datasets/                      # Dataset directory
+│   ├── hard_samples_200.zip       # Self-constructed hard sample set (compressed)
+│   ├── data.yaml                  # Base dataset configuration
+│   └── hard_data.yaml             # Configuration after hard sample injection
+│
+├── weights/                       # Pretrained weights
+│   ├── yolov8n.pt                 # YOLOv8n official pretrained weights
+│   └── yolov10n.pt                # YOLOv10n official pretrained weights
+│
+├── tools/                         # Data processing and analysis tools
+│   ├── prepare_data.py            # VOC to YOLO format conversion & dataset split
+│   ├── merge_hard_samples.py      # Hard sample fusion script (8:2 split)
+│   ├── analyze_dataset.py         # Bounding box size distribution statistics
+│   └── plot_data_distribution.py  # Dataset distribution histogram plotting
+│
+├── utils/                         # Utility and configuration modules
+│   ├── Config.py                  # Global path and hyperparameter configuration
+│   └── detect_tools.py            # Drawing, logging, and other low-level utilities
+├── requirements.txt               # Python dependencies
+├── README.md                      # Core documentation
+├── .gitignore                     # Git ignore rules (prevents uploading large runs/ and datasets/)
+│
+# --- Core scripts (located in root directory) ---
+├── train_yolov8.py                # Baseline model training
+├── train_yolov8_hard.py           # Enhanced model training (with hard samples)
+├── train_yolov10.py               # Cross-generation comparison training (YOLOv10)
+├── val_hard_only.py               # Hard-sample isolated validation & evaluation
+├── plot_curves.py                 # Training curve comparison plotting
+├── compare_test1.py               # Qualitative evaluation: red/green comparison results
+├── imgTest.py                     # Single image inference test
+└── VideoTest.py                   # Real-time video stream inference test
 ```
 
 # 📄 6. License
