@@ -4,75 +4,85 @@ import cv2
 import numpy as np
 import os
 
-# ================= 1. 路径配置区域 =================
-# 基础模型 (第一版) 权重路径
-BASE_MODEL_PATH = r".\runs\detect\train\weights\best.pt"
+BASE_MODEL = r".\runs\detect\train_yolov8_baseline\weights\best.pt"  
+ENH_MODEL = r".\runs\detect\train_yolov8_enhanced\weights\best.pt"    
+TEST_IMG_DIR = r".\datasets\images\val_hard"
+SAVE_DIR = r".\compare_results_clean"
 
-# 增强模型 (第二版) 权重路径 
-# ⚠️ 注意：请检查你 runs/detect/ 目录下，第二次训练的文件夹是叫 train2 还是 train_enhanced，并在此处对应修改！
-ENH_MODEL_PATH = r".\runs\detect\train_enhanced\weights\best.pt" 
+def clean_draw(img, results, title, is_enhanced=False):
+    draw_img = img.copy()
+    main_color = (0, 150, 0) if is_enhanced else (0, 0, 200) 
+    
+    cv2.rectangle(draw_img, (0, 0), (draw_img.shape[1], 40), main_color, -1)
+    cv2.putText(draw_img, title, (15, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 255), 2)
 
-# 困难样本测试集目录 (刚才剥离出来的那个文件夹)
-TEST_IMG_DIR = r"D.\datasets\images\val_hard"
-
-# 对比图保存输出的文件夹
-SAVE_DIR = r".\compare_results"
-# ===================================================
+    boxes = results[0].boxes
+    for box in boxes:
+        x1, y1, x2, y2 = map(int, box.xyxy[0])
+        conf = float(box.conf[0])
+        cls_id = int(box.cls[0])
+        label = f"{results[0].names[cls_id]} {conf:.2f}"
+        
+        cv2.rectangle(draw_img, (x1, y1), (x2, y2), main_color, 2)
+        (w, h), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 1)
+        cv2.rectangle(draw_img, (x1, y1 - 25), (x1 + w, y1), main_color, -1)
+        cv2.putText(draw_img, label, (x1, y1 - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+        
+    return draw_img
 
 def main():
-    # 创建保存输出结果的文件夹
     os.makedirs(SAVE_DIR, exist_ok=True)
-
-    print("⏳ 正在加载两个模型，请稍候...")
-    try:
-        model_base = YOLO(BASE_MODEL_PATH)
-        model_enh = YOLO(ENH_MODEL_PATH)
-    except Exception as e:
-        print(f"❌ 模型加载失败，请检查权重路径是否正确！\n错误信息: {e}")
+    
+    # Force check if model weight files exist
+    if not os.path.exists(BASE_MODEL) or not os.path.exists(ENH_MODEL):
+        print(f" Model weight files not found!\nPlease check:\n{BASE_MODEL}\n{ENH_MODEL}")
         return
 
-    # 获取困难测试集里的图片列表
-    img_list = [f for f in os.listdir(TEST_IMG_DIR) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
-    if not img_list:
-        print("❌ 在 val_hard 文件夹中没有找到图片！")
+    model_base = YOLO(BASE_MODEL)
+    model_enh = YOLO(ENH_MODEL)
+
+    # Deep scan the folder
+    all_files = os.listdir(TEST_IMG_DIR)
+    print(f" Found {len(all_files)} files in {TEST_IMG_DIR}.")
+    
+    # Relax image format restrictions
+    valid_exts = ('.jpg', '.jpeg', '.png', '.bmp', '.webp')
+    test_imgs = [f for f in all_files if str(f).lower().endswith(valid_exts)]
+    print(f" Found {len(test_imgs)} images with valid extensions. Generating comparison images...")
+    
+    if len(test_imgs) == 0:
+        print(" Warning: No valid image files found. Please check the folder path and file formats!")
         return
 
-    # 自动挑选前 5 张图片进行对比测试
-    test_imgs = img_list[:5] 
-
-    print(f"\n🚀 开始对比推理，共测试 {len(test_imgs)} 张图片...")
+    success_count = 0
     for img_name in test_imgs:
         img_path = os.path.join(TEST_IMG_DIR, img_name)
         
-        # 1. 分别使用两个模型进行推理 (verbose=False 用于关闭终端刷屏输出)
-        res_base = model_base(img_path, verbose=False)
-        res_enh = model_enh(img_path, verbose=False)
-
-        # 2. 获取画好检测框的图片矩阵
-        img_b = res_base[0].plot()
-        img_e = res_enh[0].plot()
-
-        # 3. 统一图片缩放尺寸 (将图片宽度统一缩放至 640，保持宽高比)
-        h, w = img_b.shape[:2]
+        try:
+            orig_img = cv2.imdecode(np.fromfile(img_path, dtype=np.uint8), cv2.IMREAD_COLOR)
+            if orig_img is None:
+                print(f" Failed to read image, possibly corrupted: {img_name}")
+                continue
+        except Exception as e:
+            print(f" Error reading image {img_name}: {e}")
+            continue
+        
+        h, w = orig_img.shape[:2]
         new_w = 640
-        new_h = int(h * (new_w / w))
-        img_b = cv2.resize(img_b, (new_w, new_h))
-        img_e = cv2.resize(img_e, (new_w, new_h))
+        orig_img = cv2.resize(orig_img, (new_w, int(h * (new_w / w))))
 
-        # 4. 在图片左上角添加文本标记，方便论文排版阅读
-        # Baseline 标记为红色，Enhanced 标记为绿色
-        cv2.putText(img_b, "Baseline Model", (15, 40), cv2.FONT_HERSHEY_DUPLEX, 1.2, (0, 0, 255), 2)
-        cv2.putText(img_e, "Enhanced Model", (15, 40), cv2.FONT_HERSHEY_DUPLEX, 1.2, (0, 255, 0), 2)
+        res_base = model_base(orig_img, verbose=False)
+        res_enh = model_enh(orig_img, verbose=False)
 
-        # 5. 左右拼接两张图片 (hstack = horizontal stack)
+        img_b = clean_draw(orig_img, res_base, "Baseline Model (Conf+)")
+        img_e = clean_draw(orig_img, res_enh, "Enhanced Model (Conf+)", True)
+
         combined_img = np.hstack((img_b, img_e))
-
-        # 6. 保存对比结果
-        save_path = os.path.join(SAVE_DIR, f"compare_{img_name}")
-        cv2.imwrite(save_path, combined_img)
-        print(f"✔️ 对比图已生成: {save_path}")
-
-    print(f"\n🎉 所有对比任务完成！请前往 {SAVE_DIR} 目录查看生成的拼接对比图。")
+        cv2.imwrite(os.path.join(SAVE_DIR, f"clean_conf_{img_name}"), combined_img)
+        print(f" Successfully processed: {img_name}")
+        success_count += 1
+        
+    print(f"\n Task completed! Successfully generated {success_count} comparison images, saved to {SAVE_DIR}.")
 
 if __name__ == '__main__':
     main()
